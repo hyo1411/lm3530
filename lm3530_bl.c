@@ -32,7 +32,7 @@
 #else
 #define MAX_LEVEL		0x71
 #endif
-#define MIN_LEVEL 		0x05
+#define MIN_LEVEL 		0x01
 #if defined(CONFIG_MACH_MSM8960_FX1)
 #if defined (CONFIG_MACH_MSM8960_FX1SK)
 #define DEFAULT_LEVEL	0x23
@@ -48,7 +48,7 @@
 #define BL_ON	1
 #define BL_OFF	0
 
-static struct i2c_client *lm3530_i2c_client;
+struct i2c_client *lm3530_i2c_client;
 
 struct backlight_platform_data {
 	void (*platform_init)(void);
@@ -93,7 +93,7 @@ int backlight_status = BL_OFF;
 static int backlight_status = BL_OFF;
 #endif
 
-static struct lm3530_device *main_lm3530_dev;
+struct lm3530_device *main_lm3530_dev;
 
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
@@ -178,10 +178,10 @@ static char mapped_value[256] = {
 #if defined(CONFIG_MACH_MSM8960_FX1)
  /*2012-1108 Backlight tuning*/
 static char mapped_value[256] = { 
-    0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, /*09*/      0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A,/*19*/
-    0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, /*29*/      0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A,/*39*/
-    0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0B, 0x0B, 0x0B, 0x0B, /*49*/      0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B,/*59*/
-    0x0C, 0x0C, 0x0C, 0x0C, 0x0C, 0x0C, 0x0C, 0x0C, 0x0C, 0x0C, /*69*/      0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0D, 0x0E,/*79*/
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /*09*/      0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,/*19*/
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /*29*/      0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,/*39*/
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x03, 0x03, 0x03, 0x03, /*49*/      0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03,/*59*/
+    0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, /*69*/      0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0A, 0x0E,/*79*/
     0x0E, 0x0E, 0x0E, 0x0E, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, /*89*/      0x0F, 0x10, 0x10, 0x10, 0x10, 0x10, 0x11, 0x11, 0x11, 0x11,/*99*/
     
     0x12, 0x12, 0x12, 0x12, 0x12, 0x13, 0x13, 0x13, 0x13, 0x13, /*109*/     0x14, 0x14, 0x14, 0x14, 0x15, 0x15, 0x15, 0x16, 0x16, 0x16,/*119*/
@@ -196,7 +196,7 @@ static char mapped_value[256] = {
            };
 #endif
 
-static void lm3530_set_main_current_level(struct i2c_client *client, int level)
+static void lm3530_set_main_current_level_remap(struct i2c_client *client, int level)
 {
 	struct lm3530_device *dev;
 	int cal_value;
@@ -231,7 +231,7 @@ static void lm3530_set_main_current_level(struct i2c_client *client, int level)
 			cal_value = max_brightness;
 
 		lm3530_write_reg(client, 0xA0, cal_value);
-		printk("%s() :level is : %d, cal_value is : 0x%x\n",
+		printk("%s() :level is : %d, remapped cal_value  is : 0x%x\n",
 			__func__, level, cal_value);
 	} else
 		lm3530_write_reg(client, 0x10, 0x00);
@@ -303,7 +303,7 @@ void lm3530_backlight_on(int level)
 
 	/* printk("%s received (prev backlight_status: %s)\n",
 	 * __func__, backlight_status?"ON":"OFF");*/
-	lm3530_set_main_current_level(main_lm3530_dev->client, level);
+	lm3530_set_main_current_level_remap(main_lm3530_dev->client, level);
 	backlight_status = BL_ON;
 
 	return;
@@ -322,7 +322,7 @@ void lm3530_backlight_off(struct early_suspend * h)
 	if (backlight_status == BL_OFF)
 		return;
 	saved_main_lcd_level = cur_main_lcd_level;
-	lm3530_set_main_current_level(main_lm3530_dev->client, 0);
+	lm3530_set_main_current_level_remap(main_lm3530_dev->client, 0);
 	/*  
 	 * At lm3530 resume processing, blocking to backlight on.
 	 * In state of phone_suspend,
@@ -343,7 +343,7 @@ void lm3530_backlight_off(struct early_suspend * h)
 	return;
 }
 
-void lm3530_lcd_backlight_set_level(int level)
+void lm3530_lcd_backlight_set_level_remap(int level)
 {
 	if (level > MAX_LEVEL)
 		level = MAX_LEVEL;
@@ -365,7 +365,7 @@ void lm3530_lcd_backlight_set_level(int level)
 		printk(KERN_INFO "%s(): No client\n", __func__);
 	}
 }
-EXPORT_SYMBOL(lm3530_lcd_backlight_set_level);
+//EXPORT_SYMBOL(lm3530_lcd_backlight_set_level_remap);
 
 #if defined(CONFIG_HAS_EARLYSUSPEND) && \
 	(defined(CONFIG_FB_MSM_MIPI_LGD_VIDEO_QHD_PT_PANEL) || defined(CONFIG_FB_MSM_MIPI_HITACHI_VIDEO_QHD_PT))
@@ -377,7 +377,7 @@ void lm3530_early_suspend(struct early_suspend * h)
 	if (backlight_status == BL_OFF)
 		return;
 
-	lm3530_lcd_backlight_set_level(0);
+	lm3530_lcd_backlight_set_level_remap(0);
 }
 
 void lm3530_late_resume(struct early_suspend * h)
@@ -388,18 +388,18 @@ void lm3530_late_resume(struct early_suspend * h)
 	if (backlight_status == BL_ON)
 		return;
 
-	lm3530_lcd_backlight_set_level(requested_in_early_suspend_lcd_level);
+	lm3530_lcd_backlight_set_level_remap(requested_in_early_suspend_lcd_level);
 	return;
 }
 #endif /* CONFIG_HAS_EARLYSUSPEND */
 
-static int bl_set_intensity(struct backlight_device *bd)
+int bl_set_intensity(struct backlight_device *bd)
 {
-	lm3530_lcd_backlight_set_level(bd->props.brightness);
+	lm3530_lcd_backlight_set_level_remap(bd->props.brightness);
 	return 0;
 }
 
-static int bl_get_intensity(struct backlight_device *bd)
+int bl_get_intensity(struct backlight_device *bd)
 {
     return cur_main_lcd_level;
 }
@@ -424,7 +424,7 @@ static ssize_t lcd_backlight_store_level(struct device *dev,
 		return -EINVAL;
 
 	level = simple_strtoul(buf, NULL, 10);
-	lm3530_lcd_backlight_set_level(level);
+	lm3530_lcd_backlight_set_level_remap(level);
 
 	return count;
 }
@@ -433,7 +433,7 @@ static int lm3530_bl_resume(struct i2c_client *client)
 {
 #if defined(CONFIG_FB_MSM_MIPI_LGD_VIDEO_QHD_PT_PANEL) || \
 	defined(CONFIG_FB_MSM_MIPI_HITACHI_VIDEO_QHD_PT)
-		lm3530_lcd_backlight_set_level(saved_main_lcd_level);
+		lm3530_lcd_backlight_set_level_remap(saved_main_lcd_level);
 #else
 		lm3530_backlight_on(saved_main_lcd_level);
 #endif
@@ -448,7 +448,7 @@ static int lm3530_bl_suspend(struct i2c_client *client, pm_message_t state)
 #if defined(CONFIG_FB_MSM_MIPI_LGD_VIDEO_QHD_PT_PANEL) || \
 	defined(CONFIG_FB_MSM_MIPI_HITACHI_VIDEO_QHD_PT)   || \
 		!defined(CONFIG_HAS_EARLYSUSPEND)
-		lm3530_lcd_backlight_set_level(saved_main_lcd_level);
+		lm3530_lcd_backlight_set_level_remap(saved_main_lcd_level);
 #else
 		lm3530_backlight_off(h);
 #endif
@@ -619,7 +619,7 @@ static struct i2c_driver main_lm3530_driver = {
 	},
 };
 
-static int __init lcd_backlight_init(void)
+int __init lcd_backlight_init(void)
 {
 	static int err;
 
@@ -628,7 +628,6 @@ static int __init lcd_backlight_init(void)
 	return err;
 }
 
-module_init(lcd_backlight_init);
 
 MODULE_DESCRIPTION("LM3530 Backlight Control");
 MODULE_AUTHOR("Jaeseong Gim <jaeseong.gim >");
